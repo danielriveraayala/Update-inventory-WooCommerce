@@ -1,35 +1,38 @@
 <?php
 require __DIR__ . '/vendor/autoload.php';
+
 use Automattic\WooCommerce\Client;
 
 // Conexión WooCommerce API destino
 // ================================
-$url_API_woo = 'https://tuempresa.site/';
-$ck_API_woo = 'ck_5fde0679616fe2363980edf8a2061e815682e2ff';
-$cs_API_woo = 'cs_992d905e88b2a119fc8e786d181e309d0685a4c0';
+$url_API_woo = 'https://americancockerspaniel.com.mx/';
+$ck_API_woo = 'ck_fab12059bb6c6ebeccb2e115664ab87e882afa5b';
+$cs_API_woo = 'cs_f3863997ff23b2ba2a1af403ab17d1de8bcf0277';
 
 $woocommerce = new Client(
     $url_API_woo,
     $ck_API_woo,
     $cs_API_woo,
-    ['version' => 'wc/v3']
+    ['version' => 'wc/v3', 'verify_ssl' => false, 'timeout' => 20000]
 );
 // ================================
 
 
 // Conexión API origen
 // ===================
-$url_API="http://localhost:3000/inventory/";
+$url_API = "https://app.petmarkt.com.mx/fetch/ws/actual_inventory_json.php?customer=4691768180916";
 
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_URL,$url_API);
+curl_setopt($ch, CURLOPT_URL, $url_API);
+curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
-echo "➜ Obteniendo datos origen ... \n";
+echo "➜ Obteniendo datos origen [$url_API] \n";
 $items_origin = curl_exec($ch);
 curl_close($ch);
 
-if ( ! $items_origin ) {
+if (!$items_origin) {
     exit('❗Error en API origen');
 }
 // ===================
@@ -39,22 +42,21 @@ if ( ! $items_origin ) {
 $items_origin = json_decode($items_origin, true);
 
 // formamos el parámetro de lista de SKUs a actualizar
-$param_sku ='';
-foreach ($items_origin as $item){
-    $param_sku .= $item['sku'] . ',';
+$param_sku = [];
+foreach ($items_origin as $item) {
+    $param_sku[] = $item['sku'];
 }
-
 echo "➜ Obteniendo los ids de los productos... \n";
 // Obtenemos todos los productos de la lista de SKUs
-$products = $woocommerce->get('products/?sku='. $param_sku);
+$products = $woocommerce->get('products?sku='.implode(',',$param_sku));
 
 // Construimos la data en base a los productos recuperados
 $item_data = [];
-foreach($products as $product){
+foreach ($products as $product) {
 
     // Filtramos el array de origen por sku
     $sku = $product->sku;
-    $search_item = array_filter($items_origin, function($item) use($sku) {
+    $search_item = array_filter($items_origin, function ($item) use ($sku) {
         return $item['sku'] == $sku;
     });
     $search_item = reset($search_item);
@@ -62,8 +64,8 @@ foreach($products as $product){
     // Formamos el array a actualizar
     $item_data[] = [
         'id' => $product->id,
-        'regular_price' => $search_item['price'],
-        'stock_quantity' => $search_item['qty'],
+        //'regular_price' => $search_item['price'],
+        'stock_quantity' => $search_item['quantity'],
     ];
 
 }
@@ -77,7 +79,7 @@ echo "➜ Actualización en lote ... \n";
 // Actualización en lotes
 $result = $woocommerce->post('products/batch', $data);
 
-if (! $result) {
+if (!$result) {
     echo("❗Error al actualizar productos \n");
 } else {
     print("✔ Productos actualizados correctamente \n");
