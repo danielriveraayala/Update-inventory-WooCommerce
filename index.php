@@ -20,7 +20,7 @@ $woocommerce = new Client(
 
 // Conexión API origen
 // ===================
-$url_API = "https://app.petmarkt.com.mx/fetch/ws/actual_inventory_json.php?customer=4691768180916";
+$url_API = "/data-example/data.json";
 
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
