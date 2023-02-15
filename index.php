@@ -5,9 +5,9 @@ use Automattic\WooCommerce\Client;
 
 // Conexión WooCommerce API destino
 // ================================
-$url_API_woo = 'https://americancockerspaniel.com.mx/';
-$ck_API_woo = 'ck_fab12059bb6c6ebeccb2e115664ab87e882afa5b';
-$cs_API_woo = 'cs_f3863997ff23b2ba2a1af403ab17d1de8bcf0277';
+$url_API_woo = 'https://tu-tienda.com';
+$ck_API_woo = 'ck_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+$cs_API_woo = 'cs_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
 
 $woocommerce = new Client(
     $url_API_woo,
